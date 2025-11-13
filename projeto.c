@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Protótipos das funções - como em prog3.pdf
+// Rascunho Funções
 void exibeAjuda();
 int** leituraManual(int *altura, int *largura);
 int** leituraPBM(const char *nome_arquivo, int *altura, int *largura);
@@ -24,9 +24,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // Aloca variáveis para armazenar altura e largura da imagem
+    // Variáveis para armazenar altura e largura da imagem
     // Usamos ponteiros para que as funções de leitura possam alterar esses valores
-    // Isso é o mesmo conceito de passagem por referência do PDF de ponteiros
     int *altura = malloc(sizeof(int));
     int *largura = malloc(sizeof(int));
     int **imagem = NULL;
@@ -49,17 +48,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Se a leitura da imagem falhou, encerra o programa
+    // Se a leitura da imagem falhou, encerra 
     if (imagem == NULL) {
         fprintf(stderr, "Erro ao carregar a imagem.\n");
         return 1;
     }
 
-    // Codifica a imagem e imprime o código resultante
+    // Codifica a imagem e imprime o código
     char *codigo = codificaImagem(imagem, *altura, *largura);
     printf("%s\n", codigo);
 
-    // Libera a memória alocada para o código e a imagem
+    // Libera a memória  para o código e a imagem
     free(codigo);
     liberaImagem(imagem, *altura);
     free(altura);
@@ -68,7 +67,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-// Função que exibe a mensagem de ajuda do programa
+// Função que exibe a mensagem de ajuda 
 void exibeAjuda() {
     printf("Uso: ImageEncoder [-? | -m | -f ARQ]\n");
     printf("Codifica imagens binárias dadas em arquivos PBM ou por dados informados manualmente.\n");
@@ -79,7 +78,7 @@ void exibeAjuda() {
     printf(" -f, --file: considera a imagem representada no arquivo PBM (Portable bitmap).\n");
 }
 
-// Função que lê os dados da imagem manualmente via stdin
+// Função que lê os dados da imagem manualmente 
 int** leituraManual(int *altura, int *largura) {
     printf("Digite a altura e largura da imagem (max 1024x768): ");
     scanf("%d %d", altura, largura);
@@ -90,7 +89,7 @@ int** leituraManual(int *altura, int *largura) {
         return NULL;
     }
 
-    // Aloca a matriz dinamicamente - como em prog5.pdf
+    // Aloca a matriz dinamicamente 
     int **imagem = malloc(*altura * sizeof(int*));
     for (int i = 0; i < *altura; i++) {
         imagem[i] = malloc(*largura * sizeof(int));
@@ -112,7 +111,7 @@ int** leituraManual(int *altura, int *largura) {
     return imagem;
 }
 
-// Função que lê os dados da imagem a partir de um arquivo PBM (P1 ASCII)
+// Função que lê os dados da imagem a partir do arquivo PBM 
 int** leituraPBM(const char *nome_arquivo, int *altura, int *largura) {
     FILE *arq = fopen(nome_arquivo, "r");
     if (!arq) return NULL;
@@ -139,7 +138,7 @@ int** leituraPBM(const char *nome_arquivo, int *altura, int *largura) {
         if (p1_ok && sscanf(linha, "%d %d", &w, &h) == 2) {
             *largura = w;
             *altura = h;
-            break; // Sai do loop após ler as dimensões
+            break; // Sai do loop após ler 
         }
     }
 
@@ -156,7 +155,7 @@ int** leituraPBM(const char *nome_arquivo, int *altura, int *largura) {
     }
 
     int px, count = 0;
-    // Lê os pixels (0 ou 1) do arquivo
+    // Lê os pixels  do arquivo
     while (fscanf(arq, "%d", &px) == 1) {
         if (px != 0 && px != 1) {
             liberaImagem(imagem, *altura);
@@ -165,7 +164,7 @@ int** leituraPBM(const char *nome_arquivo, int *altura, int *largura) {
         }
         int i = count / *largura;
         int j = count % *largura;
-        if (i >= *altura) break; // Evita estouro de memória
+        if (i >= *altura) break; 
         imagem[i][j] = px;
         count++;
     }
@@ -173,11 +172,10 @@ int** leituraPBM(const char *nome_arquivo, int *altura, int *largura) {
     fclose(arq);
     return imagem;
 }
-// Função que verifica se uma região da imagem é uniforme (todos os pixels são 0 ou 1)
-// Isso é o "caso base" da recursão - se a região é uniforme, retorna o valor
+// Caso Base
 int ehUniforme(int **imagem, int lin_ini, int col_ini, int lin_fim, int col_fim) {
     int primeiro = imagem[lin_ini][col_ini]; // Pega o valor do primeiro pixel
-    // Percorre a região (busca linear) para verificar se todos são iguais
+    // Percorre a região  para verificar se todos são iguais
     for (int i = lin_ini; i <= lin_fim; i++) {
         for (int j = col_ini; j <= col_fim; j++) {
             if (imagem[i][j] != primeiro) {
@@ -185,11 +183,10 @@ int ehUniforme(int **imagem, int lin_ini, int col_ini, int lin_fim, int col_fim)
             }
         }
     }
-    return primeiro; // 0 ou 1
+    return primeiro; 
 }
 
-// Função recursiva que implementa o algoritmo de codificação quadtree
-// Usa o conceito de recursão do segundo bimestre
+// Função recursiva para o algoritmo de codificação 
 void codificaRegiao(int **imagem, int lin_ini, int col_ini, int lin_fim, int col_fim, char *saida, int *pos) {
     int status = ehUniforme(imagem, lin_ini, col_ini, lin_fim, col_fim);
 
@@ -197,33 +194,32 @@ void codificaRegiao(int **imagem, int lin_ini, int col_ini, int lin_fim, int col
         saida[(*pos)++] = 'B'; // Região toda branca
     } else if (status == 1) {
         saida[(*pos)++] = 'P'; // Região toda preta
-    } else { // status == -1, região mista
+    } else { //  região mista
         saida[(*pos)++] = 'X'; // Divide e codifica os 4 quadrantes
 
-        // Calcula os pontos de divisão, respeitando divisão ímpar (mais à esquerda/cima)
-        // Isso está de acordo com o enunciado do projeto2.pdf
+        // Calcula os pontos de divisão
         int mid_h = lin_ini + (lin_fim - lin_ini + 1) / 2;
         int mid_w = col_ini + (col_fim - col_ini + 1) / 2;
 
-        // 1º quadrante (superior esquerdo)
+        // 1º quadrante
         if (lin_ini <= mid_h - 1 && col_ini <= mid_w - 1)
             codificaRegiao(imagem, lin_ini, col_ini, mid_h - 1, mid_w - 1, saida, pos);
-        // 2º quadrante (superior direito)
+        // 2º quadrante 
         if (lin_ini <= mid_h - 1 && mid_w <= col_fim)
             codificaRegiao(imagem, lin_ini, mid_w, mid_h - 1, col_fim, saida, pos);
-        // 3º quadrante (inferior esquerdo)
+        // 3º quadrante 
         if (mid_h <= lin_fim && col_ini <= mid_w - 1)
             codificaRegiao(imagem, mid_h, col_ini, lin_fim, mid_w - 1, saida, pos);
-        // 4º quadrante (inferior direito)
+        // 4º quadrante
         if (mid_h <= lin_fim && mid_w <= col_fim)
             codificaRegiao(imagem, mid_h, mid_w, lin_fim, col_fim, saida, pos);
     }
 }
 
-// Função principal de codificação. Chama a função recursiva para a imagem inteira.
+//  Chama a função recursiva para a imagem inteira
 char* codificaImagem(int **imagem, int altura, int largura) {
-    // Aloca uma string grande o suficiente para a pior hipótese
-    int tamanho_max = altura * largura * 4; // estimativa segura
+    // Pior hipótese
+    int tamanho_max = altura * largura * 4; 
     char *saida = malloc(tamanho_max * sizeof(char));
     int pos = 0;
 
@@ -234,8 +230,7 @@ char* codificaImagem(int **imagem, int altura, int largura) {
     return saida;
 }
 
-// Função que libera a memória alocada dinamicamente para a imagem
-// Isso evita vazamento de memória
+
 void liberaImagem(int **imagem, int altura) {
     if (imagem) {
         for (int i = 0; i < altura; i++) {
